@@ -198,4 +198,9 @@ node ./node_modules/react-native/local-cli/cli.js bundle --platform ios --dev fa
 
 ## demo 打包 android
 node ./node_modules/react-native/local-cli/cli.js bundle --platform android --dev false --entry-file platformDep.js --bundle-output ./android/app/src/main/assets/platform.android.bundle --assets-dest android/app/src/main/res/ --config platform.config.js
+## index.android.bundle
 node ./node_modules/react-native/local-cli/cli.js bundle --platform android --dev false --entry-file index.js --bundle-output ./android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/ --config buz.config.js
+## index2.android.bundle
+node ./node_modules/react-native/local-cli/cli.js bundle --platform android --dev false --entry-file index2.js --bundle-output ./android/app/src/main/assets/index2.android.bundle --assets-dest android/app/src/main/res/ --config buz.config.js
+## index3.android.bundle
+node ./node_modules/react-native/local-cli/cli.js bundle --platform android --dev false --entry-file index3.js --bundle-output ./android/app/src/main/assets/index3.android.bundle --assets-dest android/app/src/main/res/ --config buz.config.js
