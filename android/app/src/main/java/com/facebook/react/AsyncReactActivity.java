@@ -22,6 +22,7 @@ import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
 import com.facebook.react.modules.core.PermissionAwareActivity;
 import com.facebook.react.modules.core.PermissionListener;
 import com.reactnative_multibundler.FileUtils;
+import com.reactnative_multibundler.R;
 import com.reactnative_multibundler.RnBundle;
 import com.reactnative_multibundler.ScriptLoadUtil;
 import com.reactnative_multibundler.UpdateProgressListener;
@@ -38,13 +39,8 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
 
     public enum ScriptType {ASSET,FILE,NETWORK}
 
-    private final ReactActivityDelegate mDelegate;
     protected boolean bundleLoaded = false;
     private AlertDialog mProgressDialog;
-
-    protected AsyncReactActivity() {
-        mDelegate = createReactActivityDelegate();
-    }
 
     /**
      * Returns the name of the main component registered from JavaScript.
@@ -73,7 +69,8 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final ReactInstanceManager manager = ((ReactApplication)getApplication()).getReactNativeHost().getReactInstanceManager();
+
+        final ReactInstanceManager manager = getReactNativeHost().getReactInstanceManager();
         if (!manager.hasStartedCreatingInitialContext()
         ||ScriptLoadUtil.getCatalystInstance(getReactNativeHost())==null) {
             manager.addReactInstanceEventListener(new ReactInstanceManager.ReactInstanceEventListener() {
@@ -101,7 +98,9 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
                 }
             });
         }
-
+        setContentView(R.layout.rn_layout);
+        ReactRootView fl_content_rn = findViewById(R.id.fl_content_rn);
+        fl_content_rn.startReactApplication(getReactNativeHost().getReactInstanceManager(), getMainComponentName(), null);
     }
 
     protected abstract RnBundle getBundle();
@@ -120,15 +119,17 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
                     ScriptLoadUtil.setJsBundleAssetPath(
                             reactInstanceManager.getCurrentReactContext(),
                             path);
-                    mDelegate.loadApp(getMainComponentNameInner());
                 }
             });
         } else {//主线程运行
             ScriptLoadUtil.setJsBundleAssetPath(
                     reactInstanceManager.getCurrentReactContext(),
                     path);
-            initView();
         }
+    }
+
+    private ReactNativeHost getReactNativeHost(){
+        return ((ReactApplication)getApplication()).getReactNativeHost();
     }
 
     protected void loadScript(final LoadScriptListener loadListener){
@@ -151,7 +152,6 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
             ScriptLoadUtil.loadScriptFromFile(scriptPath,instance,scriptPath,false);
             loadListener.onLoadComplete(true,scriptPath);
         }else if(pathType== ScriptType.NETWORK){
-            initView();
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
             dialogBuilder.setTitle("Loading jsBundle");
             dialogBuilder.setCancelable(false);
@@ -207,53 +207,9 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
         }
     }
 
-    protected void initView(){
-        mDelegate.onCreate(null);
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        mDelegate.onPause();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        mDelegate.onResume();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mDelegate.onDestroy();
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        mDelegate.onActivityResult(requestCode, resultCode, data);
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        return mDelegate.onKeyDown(keyCode, event) || super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return mDelegate.onKeyUp(keyCode, event) || super.onKeyUp(keyCode, event);
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        return mDelegate.onKeyLongPress(keyCode, event) || super.onKeyLongPress(keyCode, event);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (!mDelegate.onBackPressed()) {
-            super.onBackPressed();
-        }
     }
 
     @Override
@@ -261,38 +217,12 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
         super.onBackPressed();
     }
 
-    @Override
-    public void onNewIntent(Intent intent) {
-        if (!mDelegate.onNewIntent(intent)) {
-            super.onNewIntent(intent);
-        }
-    }
 
     @Override
     public void requestPermissions(
             String[] permissions,
             int requestCode,
             PermissionListener listener) {
-        mDelegate.requestPermissions(permissions, requestCode, listener);
     }
 
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode,
-            String[] permissions,
-            int[] grantResults) {
-        mDelegate.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    protected final ReactNativeHost getReactNativeHost() {
-        return mDelegate.getReactNativeHost();
-    }
-
-    protected final ReactInstanceManager getReactInstanceManager() {
-        return mDelegate.getReactInstanceManager();
-    }
-
-    protected final void loadApp(String appKey) {
-        mDelegate.loadApp(appKey);
-    }
 }
