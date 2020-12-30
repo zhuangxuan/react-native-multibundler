@@ -1,10 +1,14 @@
 package com.reactnative_multibundler.demo;
 
 import android.app.Application;
+import android.util.Log;
 
+import com.facebook.react.LoadScriptListener;
 import com.facebook.react.ReactApplication;
+import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.shell.MainReactPackage;
 import com.facebook.soloader.SoLoader;
 import com.reactnative_multibundler.BuildConfig;
@@ -64,5 +68,16 @@ public class MainApplication extends Application implements ReactApplication {
   public void onCreate() {
     super.onCreate();
     SoLoader.init(this, /* native exopackage */ false);
+    final ReactInstanceManager reactInstanceManager = getReactNativeHost().getReactInstanceManager();
+    if (!reactInstanceManager.hasStartedCreatingInitialContext()) {
+      reactInstanceManager.createReactContextInBackground();//这里会先加载基础包platform.android.bundle，也可以不加载
+      reactInstanceManager.addReactInstanceEventListener(new ReactInstanceManager.ReactInstanceEventListener() {
+        @Override
+        public void onReactContextInitialized(ReactContext context) {
+          Log.i("zxa","onReactContextInitialized");
+          reactInstanceManager.removeReactInstanceEventListener(this);
+        }
+      });
+    }
   }
 }
