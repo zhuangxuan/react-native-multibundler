@@ -31,7 +31,7 @@ public class MainApplication extends Application implements ReactApplication {
   private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
     @Override
     public boolean getUseDeveloperSupport() {
-      return ScriptLoadUtil.MULTI_DEBUG;//是否是debug模式
+      return false;//是否是debug模式
     }
 
     @Override

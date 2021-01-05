@@ -18,7 +18,8 @@ public class Buz2Activity extends AsyncReactActivity {
         RnBundle bundle = new RnBundle();
         bundle.scriptType = ScriptType.NETWORK;
         bundle.scriptPath = "index2.android.bundle";
-        bundle.scriptUrl = "https://github.com/smallnew/react-native-multibundler/raw/master/remotebundles/index2.android.bundle.zip";
+//        bundle.scriptUrl = "https://github.com/smallnew/react-native-multibundler/raw/master/remotebundles/index2.android.bundle.zip";
+        bundle.scriptUrl = "index2.android.bundle";
         return bundle;
     }
 

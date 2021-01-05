@@ -8,27 +8,16 @@
 package com.facebook.react;
 
 import android.app.AlertDialog;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.view.Gravity;
-import android.view.KeyEvent;
-import android.view.ViewGroup;
-import android.widget.TextView;
-
 import com.facebook.react.bridge.CatalystInstance;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.modules.core.DefaultHardwareBackBtnHandler;
 import com.facebook.react.modules.core.PermissionAwareActivity;
 import com.facebook.react.modules.core.PermissionListener;
-import com.reactnative_multibundler.FileUtils;
 import com.reactnative_multibundler.R;
 import com.reactnative_multibundler.RnBundle;
 import com.reactnative_multibundler.ScriptLoadUtil;
-import com.reactnative_multibundler.UpdateProgressListener;
-
 import java.io.File;
-
 import javax.annotation.Nullable;
 
 /**
@@ -40,31 +29,13 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
     public enum ScriptType {ASSET,FILE,NETWORK}
 
     protected boolean bundleLoaded = false;
-    private AlertDialog mProgressDialog;
 
-    /**
-     * Returns the name of the main component registered from JavaScript.
-     * This is used to schedule rendering of the component.
-     * e.g. "MoviesApp"
-     */
-    final private @Nullable String getMainComponentNameInner() {
-        if(!bundleLoaded &&
-                getBundle().scriptType==ScriptType.NETWORK){
-            return null;
-        }
-        return getMainComponentName();
-    }
 
     protected @Nullable String getMainComponentName() {
         return null;
     }
 
-    /**
-     * Called at construction time, override if you have a custom delegate implementation.
-     */
-    protected ReactActivityDelegate createReactActivityDelegate() {
-        return new ReactActivityDelegate(this, getMainComponentNameInner());
-    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,22 +81,10 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
             scriptPath = "file://"+scriptPath.substring(0,scriptPath.lastIndexOf(File.separator)+1);
         }
         final String path = scriptPath;
-        final RnBundle bundle = getBundle();
         final ReactInstanceManager reactInstanceManager = ((ReactApplication)getApplication()).getReactNativeHost().getReactInstanceManager();
-        if(bundle.scriptType == ScriptType.NETWORK){//如果是网络加载的话，此时正在子线程
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ScriptLoadUtil.setJsBundleAssetPath(
-                            reactInstanceManager.getCurrentReactContext(),
-                            path);
-                }
-            });
-        } else {//主线程运行
-            ScriptLoadUtil.setJsBundleAssetPath(
-                    reactInstanceManager.getCurrentReactContext(),
-                    path);
-        }
+        ScriptLoadUtil.setJsBundleAssetPath(
+                reactInstanceManager.getCurrentReactContext(),
+                path);
     }
 
     private ReactNativeHost getReactNativeHost(){
@@ -145,71 +104,7 @@ public abstract class AsyncReactActivity extends androidx.fragment.app.FragmentA
         if(pathType== ScriptType.ASSET) {
             ScriptLoadUtil.loadScriptFromAsset(getApplicationContext(),instance,scriptPath,false);
             loadListener.onLoadComplete(true,null);
-        }else if(pathType== ScriptType.FILE){
-            File scriptFile = new File(getApplicationContext().getFilesDir()
-                    +File.separator+/*ScriptLoadUtil.REACT_DIR+File.separator+*/scriptPath);
-            scriptPath = scriptFile.getAbsolutePath();
-            ScriptLoadUtil.loadScriptFromFile(scriptPath,instance,scriptPath,false);
-            loadListener.onLoadComplete(true,scriptPath);
-        }else if(pathType== ScriptType.NETWORK){
-            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setTitle("Loading jsBundle");
-            dialogBuilder.setCancelable(false);
-            final TextView tvv = new TextView(this);
-            tvv.setText("conneting");//由于demo中把文件放在了github上，所以http建立连接要花好几秒时间
-            tvv.setTextColor(Color.BLACK);
-            tvv.setGravity(Gravity.CENTER);
-            tvv.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT));
-            dialogBuilder.setView(tvv);
-            mProgressDialog = dialogBuilder.create();
-            mProgressDialog.show();
-            //由于downloadRNBundle里面的md5参数由组件名代替了，实际开发中需要用到md5校验的需要自己修改
-            FileUtils.downloadRNBundle(this.getApplicationContext(), scriptPath, getMainComponentName(), new UpdateProgressListener() {
-                @Override
-                public void updateProgressChange(final int precent) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if(tvv!=null) {
-                                tvv.setText(String.valueOf(precent));
-                            }
-                        }
-                    });
-                }
-
-                @Override
-                public void complete(boolean success) {
-                    if(mProgressDialog!=null){
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mProgressDialog.dismiss();
-                                mProgressDialog = null;
-                            }
-                        });
-                    }
-                    if(!success){
-                        loadListener.onLoadComplete(false,null);
-                        return;
-                    }
-                    String info = FileUtils.getCurrentPackageMd5(getApplicationContext());
-                    String bundlePath = FileUtils.getPackageFolderPath(getApplicationContext(),info);
-                    String jsBundleFilePath = FileUtils.appendPathComponent(bundlePath,bundle.scriptPath);
-                    File bundleFile = new File(jsBundleFilePath);
-                    if(bundleFile!=null&&bundleFile.exists()){
-                        ScriptLoadUtil.loadScriptFromFile(jsBundleFilePath,instance,jsBundleFilePath,false);
-                    }else{
-                        success=false;
-                    }
-                    loadListener.onLoadComplete(success,jsBundleFilePath);
-                }
-            });
         }
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
     }
 
     @Override

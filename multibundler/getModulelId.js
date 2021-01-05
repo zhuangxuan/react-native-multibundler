@@ -16,7 +16,7 @@ var buzMappingPath;
  * isBuz:是否是业务包
  * */
 function getModuleIdByIndex(projectRootPath,path,entry,isBuz){
-
+  console.log('-----',"projectRootPath:"+projectRootPath+",path:"+path+",entry:"+entry+",isBuz:"+isBuz)
   const moduleIdConfig = require('./ModuleIdConfig.json');
   if(curModuleId==-100) {
     curModuleId =  - 1;//基础包的Module都是从0开始的
@@ -93,6 +93,5 @@ function getModuleId(projectRootPath,path,entry,isBuz){
   }
   return getModuleIdByName(projectRootPath,path);
 }
-
 
 module.exports={getModuleId,useIndex}
